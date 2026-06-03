@@ -1,15 +1,109 @@
-## Bing Wallpaper (2026-05)
-![](https://cn.bing.com/th?id=OHR.EvergladesWetlands_ZH-CN9515366484_UHD.jpg&w=1000)Today: [大沼泽地国家公园航拍景观，佛罗里达州，美国 (© Tetra Images/Getty Images)](https://cn.bing.com/th?id=OHR.EvergladesWetlands_ZH-CN9515366484_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)
-|      |      |      |
-| :----: | :----: | :----: |
-|![](https://cn.bing.com/th?id=OHR.EvergladesWetlands_ZH-CN9515366484_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-31 [download 4k](https://cn.bing.com/th?id=OHR.EvergladesWetlands_ZH-CN9515366484_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.EquusQuagga_ZH-CN9323988132_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-30 [download 4k](https://cn.bing.com/th?id=OHR.EquusQuagga_ZH-CN9323988132_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.SummitEverest_ZH-CN9252833251_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-29 [download 4k](https://cn.bing.com/th?id=OHR.SummitEverest_ZH-CN9252833251_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.HwaesongFortress_ZH-CN8225341972_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-28 [download 4k](https://cn.bing.com/th?id=OHR.HwaesongFortress_ZH-CN8225341972_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.OtterDay_ZH-CN7735013625_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-27 [download 4k](https://cn.bing.com/th?id=OHR.OtterDay_ZH-CN7735013625_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.LupineBloom_ZH-CN7639721663_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-26 [download 4k](https://cn.bing.com/th?id=OHR.LupineBloom_ZH-CN7639721663_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.HawaMahal2026_ZH-CN7233246545_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-25 [download 4k](https://cn.bing.com/th?id=OHR.HawaMahal2026_ZH-CN7233246545_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.DolomitesPark_ZH-CN7134423478_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-24 [download 4k](https://cn.bing.com/th?id=OHR.DolomitesPark_ZH-CN7134423478_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.ThreeTurtlesButterflies_ZH-CN7043849571_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-23 [download 4k](https://cn.bing.com/th?id=OHR.ThreeTurtlesButterflies_ZH-CN7043849571_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.KauehiAtollLagoon_ZH-CN9552036080_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-22 [download 4k](https://cn.bing.com/th?id=OHR.KauehiAtollLagoon_ZH-CN9552036080_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.SichuanTea_ZH-CN6703437873_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-21 [download 4k](https://cn.bing.com/th?id=OHR.SichuanTea_ZH-CN6703437873_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.BumbleBee_ZH-CN6429376340_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-20 [download 4k](https://cn.bing.com/th?id=OHR.BumbleBee_ZH-CN6429376340_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.SpainLighthouse_ZH-CN6024263415_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-19 [download 4k](https://cn.bing.com/th?id=OHR.SpainLighthouse_ZH-CN6024263415_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.MuseumLondon_ZH-CN5602977820_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-18 [download 4k](https://cn.bing.com/th?id=OHR.MuseumLondon_ZH-CN5602977820_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.ShenandoahSunset_ZH-CN4399136794_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-17 [download 4k](https://cn.bing.com/th?id=OHR.ShenandoahSunset_ZH-CN4399136794_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.SmithRockPark_ZH-CN4210144402_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-16 [download 4k](https://cn.bing.com/th?id=OHR.SmithRockPark_ZH-CN4210144402_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.EndangeredWhales_ZH-CN4053106967_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-15 [download 4k](https://cn.bing.com/th?id=OHR.EndangeredWhales_ZH-CN4053106967_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.EndangeredWhales_ZH-CN4053106967_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-15 [download 4k](https://cn.bing.com/th?id=OHR.EndangeredWhales_ZH-CN4053106967_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.Pitigliano_ZH-CN1509921892_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-14 [download 4k](https://cn.bing.com/th?id=OHR.Pitigliano_ZH-CN1509921892_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.AlabamaHills_ZH-CN1387018045_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-13 [download 4k](https://cn.bing.com/th?id=OHR.AlabamaHills_ZH-CN1387018045_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.Fratercula_ZH-CN1239275412_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-12 [download 4k](https://cn.bing.com/th?id=OHR.Fratercula_ZH-CN1239275412_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.QueenslandReef_ZH-CN1138150002_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-11 [download 4k](https://cn.bing.com/th?id=OHR.QueenslandReef_ZH-CN1138150002_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.MotherCub_ZH-CN0999123163_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-10 [download 4k](https://cn.bing.com/th?id=OHR.MotherCub_ZH-CN0999123163_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.MotherCub_ZH-CN0999123163_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-10 [download 4k](https://cn.bing.com/th?id=OHR.MotherCub_ZH-CN0999123163_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.SkradinskiBuk_ZH-CN0882603359_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-09 [download 4k](https://cn.bing.com/th?id=OHR.SkradinskiBuk_ZH-CN0882603359_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.SardinianDonkey_ZH-CN0758031524_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-08 [download 4k](https://cn.bing.com/th?id=OHR.SardinianDonkey_ZH-CN0758031524_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.Kofa_ZH-CN0584573563_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-07 [download 4k](https://cn.bing.com/th?id=OHR.Kofa_ZH-CN0584573563_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.BulgariaPlains_ZH-CN3853985252_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-06 [download 4k](https://cn.bing.com/th?id=OHR.BulgariaPlains_ZH-CN3853985252_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.BeginningofSummerY26_ZH-CN7628545617_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-05 [download 4k](https://cn.bing.com/th?id=OHR.BeginningofSummerY26_ZH-CN7628545617_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.KsarOuledSoltane_ZH-CN3569810663_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-04 [download 4k](https://cn.bing.com/th?id=OHR.KsarOuledSoltane_ZH-CN3569810663_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
-|![](https://cn.bing.com/th?id=OHR.MasaiLeopard_ZH-CN3406483238_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-03 [download 4k](https://cn.bing.com/th?id=OHR.MasaiLeopard_ZH-CN3406483238_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.GreenJasper_ZH-CN3030401138_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-02 [download 4k](https://cn.bing.com/th?id=OHR.GreenJasper_ZH-CN3030401138_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|![](https://cn.bing.com/th?id=OHR.MayLaborDayY26_ZH-CN7554485395_UHD.jpg&pid=hp&w=384&h=216&rs=1&c=4)2026-05-01 [download 4k](https://cn.bing.com/th?id=OHR.MayLaborDayY26_ZH-CN7554485395_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4)|
+# Daily Bing Wallpaper
+
+A PowerShell script that downloads [Bing daily wallpapers](https://cn.bing.com) in 4K resolution from the [niumoo/bing-wallpaper](https://github.com/niumoo/bing-wallpaper) repository and saves them locally.
+
+## Features
+
+- **4K HD** — Downloads wallpapers at 3840×2160 resolution
+- **Batch download** — Fetches wallpapers for the past N days in one run (default: 7)
+- **Single date** — Download wallpaper for any past date
+- **Auto cleanup** — Automatically deletes expired files based on retention policy
+- **Resume-friendly** — Existing files are skipped, no redundant downloads
+- **Network check** — Verifies WiFi or Ethernet connectivity before running; aborts with an error if offline
+
+## Requirements
+
+- Windows 8 / Windows Server 2012 or later
+- PowerShell 5.1+
+- `NetAdapter` module (included with Windows)
+
+## Usage
+
+### Basic
+
+```powershell
+# Download wallpapers for the past 7 days to the current directory
+.\Save-BingWallpaper.ps1
+```
+
+### Custom day range
+
+```powershell
+# Download wallpapers for the past 30 days
+.\Save-BingWallpaper.ps1 -NumDays 30
+```
+
+### Specific date
+
+```powershell
+# Download the wallpaper for April 30, 2026
+.\Save-BingWallpaper.ps1 -Date "2026-04-30"
+```
+
+### Custom output directory
+
+```powershell
+# Download to a custom directory
+.\Save-BingWallpaper.ps1 -OutputPath "C:\Wallpapers" -Date "2026-05-01"
+```
+
+### Retention cleanup
+
+```powershell
+# Download and also delete files older than 30 days
+.\Save-BingWallpaper.ps1 -NumDays 7 -RetentionDays 30
+
+# Never auto-delete
+.\Save-BingWallpaper.ps1 -RetentionDays 0
+```
+
+## Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `-OutputPath` | string | Current directory | — | Directory where wallpapers are saved |
+| `-Date` | string | None | `yyyy-MM-dd`, not in the future | Specifies a single date to download |
+| `-NumDays` | int | 7 | 1 ~ 365 | Number of past days to download (ignored when `-Date` is set) |
+| `-RetentionDays` | int | 14 | 0 ~ 3650 | Days to retain `.jpg` files; older files are deleted. Set to 0 to disable |
+
+## How It Works
+
+1. **Network check** — Detects active physical network adapters (WiFi / Ethernet); aborts if none are up
+2. **Date list** — Builds the list of dates to download based on `-Date` or `-NumDays`
+3. **Fetch index** — Pulls the monthly README from GitHub and parses 4K image URLs
+4. **Cleanup** — Deletes `.jpg` files older than `-RetentionDays` days
+5. **Download** — Downloads each wallpaper one by one, skipping existing files
+6. **Summary** — Prints download/skip/fail counts; exits with code 1 on any failure
+
+## File Naming
+
+Wallpapers are named by date in `yyyy-MM-dd.jpg` format, for example:
+
+```
+2026-05-31.jpg
+2026-05-30.jpg
+2026-05-29.jpg
+```
+
+## Testing
+
+This project uses [Pester](https://github.com/pester/Pester) for testing:
+
+```powershell
+Invoke-Pester -Path .\tests\Save-BingWallpaper.Tests.ps1
+```
+
+## Scheduling
+
+Use Windows Task Scheduler to automate daily downloads:
+
+1. Open **Task Scheduler**
+2. Create a basic task with a daily trigger
+3. Action: Start a program — `powershell.exe`
+4. Arguments: `-ExecutionPolicy Bypass -File "C:\path\to\Save-BingWallpaper.ps1" -OutputPath "C:\Wallpapers"`
+
+## License
+
+MIT License
+
+

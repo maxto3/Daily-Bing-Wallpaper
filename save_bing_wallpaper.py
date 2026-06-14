@@ -5,6 +5,7 @@ Downloads Bing daily wallpapers from GitHub-hosted wallpaper index.
 Fetches Bing wallpapers in 4K resolution from the niumoo/bing-wallpaper
 GitHub repository and saves them to a local directory.
 
+Cross-platform: Windows, Linux, and macOS.
 Without --date, downloads wallpapers for the past N days (default: 7).
 With --date, downloads wallpaper for a specific date only.
 """
@@ -45,15 +46,20 @@ FILENAME_DATE_PATTERN = re.compile(r"^(\d{4})-(\d{2})-(\d{2})\.jpg$")
 log = logging.getLogger("save_bing_wallpaper")
 
 # ---------------------------------------------------------------------------
-# Network connectivity check (Linux-adapted)
+# Cross-platform network connectivity check
 # ---------------------------------------------------------------------------
 
 
 def _get_active_interfaces() -> list[str]:
-    """Return names of non-loopback network interfaces with operstate 'up'.
+    """Return names of active non-loopback network interfaces.
 
-    Reads /sys/class/net/ on Linux to find active physical/virtual interfaces.
+    On Linux: reads /sys/class/net/ to enumerate interfaces with operstate 'up'.
+    On other platforms (Windows/macOS): returns an empty list — connectivity is
+    verified solely via the TCP socket probe in check_network_connectivity().
     """
+    if sys.platform != "linux":
+        return []
+
     active = []
     net_dir = Path("/sys/class/net")
     if not net_dir.is_dir():
@@ -82,21 +88,21 @@ def check_network_connectivity() -> None:
     """Verify network connectivity; raise SystemExit if offline.
 
     Checks:
-    1. At least one non-loopback interface is UP (via /sys/class/net/).
-    2. A TCP socket can connect to github.com:443 (fallback probe).
+    1. (Linux only) At least one non-loopback interface is UP (via /sys/class/net/).
+    2. A TCP socket can connect to github.com:443 (all platforms).
     """
     active_ifaces = _get_active_interfaces()
 
-    if not active_ifaces:
+    if active_ifaces:
+        log.info(
+            "Network OK - active adapter(s): %s",
+            "; ".join(active_ifaces),
+        )
+    elif sys.platform == "linux":
         raise RuntimeError(
             "No active network connection detected. "
             "Please connect to WiFi or Ethernet and try again."
         )
-
-    log.info(
-        "Network OK - active adapter(s): %s",
-        "; ".join(active_ifaces),
-    )
 
     # Also verify we can actually reach the internet
     try:

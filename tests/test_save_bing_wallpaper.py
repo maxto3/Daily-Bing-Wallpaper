@@ -95,7 +95,7 @@ def mock_requests_get_for_readme(
 
 class TestNetworkCheck:
     def test_active_interfaces_found(self):
-        """When /sys/class/net has an up interface, it should be detected."""
+        """On Linux, when /sys/class/net has an up interface, it should be detected."""
         # Create a mock Path that simulates /sys/class/net with eth0 up
         mock_eth0 = MagicMock()
         mock_eth0.is_dir.return_value = True
@@ -108,16 +108,27 @@ class TestNetworkCheck:
         mock_net_dir.is_dir.return_value = True
         mock_net_dir.iterdir.return_value = [mock_eth0]
 
-        with patch.object(sbw, "Path", return_value=mock_net_dir):
-            active = sbw._get_active_interfaces()
+        with patch("sys.platform", "linux"):
+            with patch.object(sbw, "Path", return_value=mock_net_dir):
+                active = sbw._get_active_interfaces()
 
         assert "eth0" in active
 
     def test_no_active_interfaces_raises(self):
-        """When no interfaces are up, check_network_connectivity should raise."""
+        """On Linux, when no interfaces are up, check_network_connectivity should raise."""
         with patch.object(sbw, "_get_active_interfaces", return_value=[]):
-            with pytest.raises(RuntimeError, match="No active network connection"):
-                sbw.check_network_connectivity()
+            with patch("sys.platform", "linux"):
+                with pytest.raises(RuntimeError, match="No active network connection"):
+                    sbw.check_network_connectivity()
+
+    def test_non_linux_skips_interface_check(self):
+        """On non-Linux, empty active interfaces should not raise — socket probe is the fallback."""
+        mock_sock = MagicMock()
+        with patch.object(sbw, "_get_active_interfaces", return_value=[]):
+            with patch("sys.platform", "win32"):
+                with patch("socket.create_connection", return_value=mock_sock):
+                    # Should not raise
+                    sbw.check_network_connectivity()
 
     def test_interfaces_up_but_socket_fails(self):
         """When interfaces are up but socket connect fails, should raise."""

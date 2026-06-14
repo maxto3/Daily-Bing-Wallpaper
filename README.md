@@ -4,7 +4,7 @@ Downloads [Bing daily wallpapers](https://cn.bing.com) in 4K resolution from the
 
 Two implementations are available:
 - **PowerShell** — for Windows
-- **Python** — for Linux (also works on macOS / WSL)
+- **Python** — cross-platform (Windows / Linux / macOS)
 
 ## Features
 
@@ -17,7 +17,7 @@ Two implementations are available:
 
 ---
 
-## Python (Linux / macOS / WSL)
+## Python (Windows / Linux / macOS)
 
 ### Requirements
 
@@ -87,12 +87,20 @@ python -m pytest tests/ -v
 
 ### Scheduling
 
-Use **cron** to automate daily downloads:
+**Linux / macOS** — Use **cron** to automate daily downloads:
 
 ```bash
 # Run daily at 8:00 AM
 0 8 * * * cd /path/to/Daily-Bing-Wallpaper && python save_bing_wallpaper.py --output-path ~/Pictures/Wallpapers >> /tmp/bing-wallpaper.log 2>&1
 ```
+
+**Windows** — Use **Task Scheduler** (with `pythonw.exe` for no console window):
+
+1. Open **Task Scheduler**
+2. Create a basic task with a daily trigger
+3. Action: Start a program — `C:\path\to\pythonw.exe`
+4. Arguments: `d:\path\to\save_bing_wallpaper.py --output-path "C:\Wallpapers"`
+5. General tab: select "Run whether user is logged on or not"
 
 ---
 

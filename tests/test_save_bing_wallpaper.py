@@ -168,7 +168,7 @@ class TestFetchWallpaperData:
 
         dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
 
-        with patch("requests.get", side_effect=mock_requests_get_for_readme(mock_readmes, captured)):
+        with patch("requests.Session.get", side_effect=mock_requests_get_for_readme(mock_readmes, captured)):
             url_map = sbw.fetch_wallpaper_data(dates)
 
         assert len(captured) > 0
@@ -208,7 +208,7 @@ class TestFetchWallpaperData:
             for i in range(num_days_to_cross)
         ]
 
-        with patch("requests.get", side_effect=mock_requests_get_for_readme(mock_readmes, captured)):
+        with patch("requests.Session.get", side_effect=mock_requests_get_for_readme(mock_readmes, captured)):
             url_map = sbw.fetch_wallpaper_data(dates)
 
         assert len(captured) > 1
@@ -222,7 +222,7 @@ class TestFetchWallpaperData:
         mock_readmes = {"2026-05": mock_readme}
         captured = []
 
-        with patch("requests.get", side_effect=mock_requests_get_for_readme(mock_readmes, captured)):
+        with patch("requests.Session.get", side_effect=mock_requests_get_for_readme(mock_readmes, captured)):
             url_map = sbw.fetch_wallpaper_data(["2026-05-15"])
 
         assert len(captured) == 1
@@ -241,7 +241,7 @@ class TestFetchWallpaperData:
             mock_resp.raise_for_status = MagicMock()
             return mock_resp
 
-        with patch("requests.get", side_effect=_failing_get):
+        with patch("requests.Session.get", side_effect=_failing_get):
             url_map = sbw.fetch_wallpaper_data(["2025-01-15"])
 
         assert url_map == {}
@@ -367,12 +367,12 @@ class TestDownloadWallpapers:
         tasks = [
             {
                 "date_str": date_str,
-                "download_url": "https://example.com/wp.jpg",
+                "download_url": "https://cn.bing.com/th?id=OHR.Test_UHD.jpg",
             }
         ]
 
         # Mock the download
-        def _mock_download(url, dest: Path):
+        def _mock_download(url, dest: Path, session=None):
             dest.write_text("downloaded content")
 
         with patch.object(sbw, "_download_to_file", side_effect=_mock_download):
@@ -382,6 +382,33 @@ class TestDownloadWallpapers:
         assert skipped == 0
         assert failed == 0
         assert (tmp_path / f"{date_str}.jpg").exists()
+
+
+# ---------------------------------------------------------------------------
+# URL safety validator tests
+# ---------------------------------------------------------------------------
+
+
+class TestIsSafeUrl:
+    def test_allows_bing_com_url(self):
+        """Bing.com URLs should be accepted."""
+        assert sbw.is_safe_url("https://cn.bing.com/th?id=OHR.Test_UHD.jpg")
+
+    def test_allows_bing_net_url(self):
+        """Bing.net URLs should be accepted."""
+        assert sbw.is_safe_url("https://images.bing.net/wallpaper.jpg")
+
+    def test_rejects_non_bing_url(self):
+        """Non-Bing URLs should be rejected."""
+        assert not sbw.is_safe_url("https://example.com/malware.jpg")
+
+    def test_rejects_non_http_scheme(self):
+        """Non-HTTP/HTTPS URLs should be rejected."""
+        assert not sbw.is_safe_url("ftp://bing.com/file.jpg")
+
+    def test_rejects_malformed_url(self):
+        """Malformed URLs should be safely rejected."""
+        assert not sbw.is_safe_url("not a url at all")
 
 
 # ---------------------------------------------------------------------------
@@ -412,10 +439,10 @@ class TestMainFlow:
     def test_main_success_flow(self, tmp_path, capsys):
         """Full successful flow: network OK, data found, files downloaded."""
         mock_url_map = {
-            "2026-05-15": "https://example.com/wp.jpg",
+            "2026-05-15": "https://cn.bing.com/th?id=OHR.Test_UHD.jpg",
         }
 
-        def _mock_download(url, dest: Path):
+        def _mock_download(url, dest: Path, session=None):
             dest.write_text("content")
 
         with patch.object(sbw, "check_network_connectivity", return_value=None):

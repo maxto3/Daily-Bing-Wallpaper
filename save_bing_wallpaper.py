@@ -118,15 +118,73 @@ def check_network_connectivity() -> None:
 
 
 # ---------------------------------------------------------------------------
+# URL safety validator
+# ---------------------------------------------------------------------------
+
+
+def is_safe_url(url: str) -> bool:
+    """Verify URL points to a trusted Bing domain (bing.com or bing.net).
+
+    Prevents SSRF and malicious download from hijacked upstream README files.
+    """
+    from urllib.parse import urlparse
+
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        domain = parsed.netloc.lower()
+        return (
+            domain == "bing.com"
+            or domain.endswith(".bing.com")
+            or domain.endswith(".bing.net")
+        )
+    except Exception:
+        return False
+
+
+# ---------------------------------------------------------------------------
+# HTTP session factory (connection pooling + retry)
+# ---------------------------------------------------------------------------
+
+
+def _create_session() -> requests.Session:
+    """Create a requests.Session with connection pooling and auto-retry.
+
+    Retries up to 3 times with exponential backoff (1s, 2s, 4s) on
+    transient server errors (500, 502, 503, 504).
+    """
+    from urllib3.util import Retry
+    from requests.adapters import HTTPAdapter
+
+    session = requests.Session()
+    retries = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[500, 502, 503, 504],
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+
+# ---------------------------------------------------------------------------
 # README fetcher & parser
 # ---------------------------------------------------------------------------
 
 
-def fetch_wallpaper_data(dates: list[str]) -> dict[str, str]:
+def fetch_wallpaper_data(
+    dates: list[str],
+    session: requests.Session | None = None,
+) -> dict[str, str]:
     """Fetch wallpaper 4K URLs from GitHub monthly README pages.
 
     Args:
         dates: List of date strings in yyyy-MM-dd format.
+        session: Optional requests.Session for connection reuse.
+            Creates a new session with retry if not provided.
 
     Returns:
         Dict mapping date string -> 4K download URL.
@@ -139,13 +197,16 @@ def fetch_wallpaper_data(dates: list[str]) -> dict[str, str]:
             year_months.add(f"{m.group(1)}-{m.group(2)}")
 
     date_url_map: dict[str, str] = {}
+    close_session = session is None
+    if session is None:
+        session = _create_session()
 
     for year_month in sorted(year_months):
         readme_url = README_URL_TEMPLATE.format(year_month=year_month)
         log.info("Fetching wallpaper index for %s...", year_month)
 
         try:
-            resp = requests.get(readme_url, timeout=README_FETCH_TIMEOUT)
+            resp = session.get(readme_url, timeout=README_FETCH_TIMEOUT)
             resp.raise_for_status()
             readme_text = resp.text
         except requests.RequestException as exc:
@@ -155,12 +216,18 @@ def fetch_wallpaper_data(dates: list[str]) -> dict[str, str]:
         # Parse date + 4K URL pairs from markdown table
         matches = URL_PATTERN.findall(readme_text)
         for parsed_date, url in matches:
+            # Security: only accept URLs from trusted Bing domains
+            if not is_safe_url(url):
+                log.warning("Skipping unsafe URL for %s: %s", parsed_date, url)
+                continue
             # Keep only the first occurrence in case of duplicates
             if parsed_date not in date_url_map:
                 date_url_map[parsed_date] = url
 
         log.info("  Found %d wallpaper entries for %s.", len(matches), year_month)
 
+    if close_session:
+        session.close()
     return date_url_map
 
 
@@ -226,7 +293,7 @@ def cleanup_expired(
 
 
 def download_wallpapers(
-    download_tasks: list[dict],
+    download_tasks: list[dict[str, str]],
     output_dir: Path,
 ) -> tuple[int, int, int]:
     """Download wallpaper files.
@@ -241,65 +308,78 @@ def download_wallpapers(
     skipped = 0
     failed = 0
 
-    for task in download_tasks:
-        date_str = task["date_str"]
-        download_url = task["download_url"]
-        output_file = output_dir / f"{date_str}.jpg"
+    with _create_session() as session:
+        for task in download_tasks:
+            date_str = task["date_str"]
+            download_url = task["download_url"]
+            output_file = output_dir / f"{date_str}.jpg"
 
-        # Skip if file already exists
-        if output_file.exists():
-            log.info("Skipping %s: file already exists.", date_str)
-            skipped += 1
-            continue
-
-        log.info("Downloading %s: %s", date_str, download_url)
-        log.info("Saving to: %s", output_file)
-
-        # Download to a temporary file, then rename atomically
-        try:
-            _download_to_file(download_url, output_file)
-        except Exception as exc:
-            log.error("Download failed for %s: %s", date_str, exc)
-            # Clean up temp file if it exists
+            # Skip if file already exists
             if output_file.exists():
-                try:
-                    output_file.unlink()
-                except OSError:
-                    pass
-            failed += 1
-            continue
+                log.info("Skipping %s: file already exists.", date_str)
+                skipped += 1
+                continue
 
-        # Verify and report
-        if output_file.exists():
-            size_kb = output_file.stat().st_size / 1024
-            log.info(
-                "Download complete: %s (Size: %.1f KB)", output_file, size_kb
-            )
-            downloaded += 1
-        else:
-            log.error(
-                "Download appeared to succeed for %s but output file not found.",
-                date_str,
-            )
-            failed += 1
+            # Defense-in-depth: verify URL is from a trusted Bing domain
+            if not is_safe_url(download_url):
+                log.error("Blocked unsafe download URL for %s: %s", date_str, download_url)
+                failed += 1
+                continue
+
+            log.info("Downloading %s: %s", date_str, download_url)
+            log.info("Saving to: %s", output_file)
+
+            # Download to a temporary file, then replace atomically
+            try:
+                _download_to_file(download_url, output_file, session=session)
+            except Exception as exc:
+                log.error("Download failed for %s: %s", date_str, exc)
+                # Clean up temp file if it exists
+                if output_file.exists():
+                    try:
+                        output_file.unlink()
+                    except OSError:
+                        pass
+                failed += 1
+                continue
+
+            # Verify and report
+            if output_file.exists():
+                size_kb = output_file.stat().st_size / 1024
+                log.info(
+                    "Download complete: %s (Size: %.1f KB)", output_file, size_kb
+                )
+                downloaded += 1
+            else:
+                log.error(
+                    "Download appeared to succeed for %s but output file not found.",
+                    date_str,
+                )
+                failed += 1
 
     return downloaded, skipped, failed
 
 
-def _download_to_file(url: str, dest: Path) -> None:
-    """Download URL content to dest via a temp file (atomic rename)."""
-    # Write to a temp file in the same directory so rename is atomic
+def _download_to_file(
+    url: str,
+    dest: Path,
+    session: requests.Session | None = None,
+) -> None:
+    """Download URL content to dest via a temp file (atomic replace)."""
+    if session is None:
+        session = _create_session()
+    # Write to a temp file in the same directory so replacement is atomic
     tmp_fd, tmp_path = tempfile.mkstemp(
         dir=dest.parent, prefix=f".{dest.name}.", suffix=".tmp"
     )
     try:
         with os.fdopen(tmp_fd, "wb") as tmp_file:
-            with requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as resp:
+            with session.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as resp:
                 resp.raise_for_status()
                 for chunk in resp.iter_content(chunk_size=8192):
                     tmp_file.write(chunk)
-        # Atomic rename to final destination
-        os.rename(tmp_path, dest)
+        # Atomic replace to final destination (cross-platform compatible)
+        os.replace(tmp_path, dest)
     except Exception:
         # Clean up temp file on any error
         try:

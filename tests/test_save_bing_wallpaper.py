@@ -3,6 +3,7 @@
 Run: python -m pytest tests/ -v
 """
 
+import os
 import re
 from datetime import date, timedelta
 from pathlib import Path
@@ -457,3 +458,209 @@ class TestMainFlow:
 
         assert exit_code == 0
         assert (tmp_path / "2026-05-15.jpg").exists()
+
+
+# ---------------------------------------------------------------------------
+# Optional dependency bootstrap tests (PySocks / SOCKS proxies)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _clean_proxy_env(monkeypatch):
+    """Drop host proxy env vars so tests are reproducible.
+
+    Debian feeds /etc/environment into cron via pam_env, so a host configured
+    with SOCKS proxies would otherwise let main() trigger a PySocks install
+    during the test run.
+    """
+    for name in list(os.environ):
+        if name.lower().endswith("_proxy"):
+            monkeypatch.delenv(name, raising=False)
+
+
+class TestDetectSocksProxies:
+    def test_ignores_http_proxy(self, monkeypatch):
+        """Plain HTTP proxies need no extra dependency and must be ignored."""
+        monkeypatch.setenv("http_proxy", "http://localhost:1081")
+        monkeypatch.setenv("https_proxy", "http://localhost:1081")
+        assert sbw.detect_socks_proxies() == {}
+
+    def test_detects_socks_proxies(self, monkeypatch):
+        monkeypatch.setenv("http_proxy", "socks5h://localhost:1080")
+        monkeypatch.setenv("https_proxy", "socks5h://localhost:1080")
+        assert sbw.detect_socks_proxies() == {
+            "http_proxy": "socks5h://localhost:1080",
+            "https_proxy": "socks5h://localhost:1080",
+        }
+
+    def test_detects_all_proxy_alias(self, monkeypatch):
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        assert sbw.detect_socks_proxies() == {"all_proxy": "socks5://localhost:1080"}
+
+    def test_no_proxy_wildcard_bypasses(self, monkeypatch):
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        monkeypatch.setenv("no_proxy", "*")
+        assert sbw.detect_socks_proxies() == {}
+
+    def test_no_proxy_is_not_treated_as_proxy(self, monkeypatch):
+        monkeypatch.setenv("no_proxy", "socks5://localhost:1080")
+        assert sbw.detect_socks_proxies() == {}
+
+    def test_schemeless_value_is_http(self, monkeypatch):
+        monkeypatch.setenv("http_proxy", "localhost:1080")
+        assert sbw.detect_socks_proxies() == {}
+
+
+class TestPipEnv:
+    def test_strips_socks_proxies_only(self, monkeypatch):
+        monkeypatch.setenv("http_proxy", "socks5h://localhost:1080")
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        monkeypatch.setenv("HTTP_PROXY", "http://localhost:1081")
+        monkeypatch.setenv("no_proxy", "localhost")
+
+        env = sbw._pip_env()
+
+        # SOCKS proxies would make pip fail with the same missing-dependency error
+        assert "http_proxy" not in env
+        assert "all_proxy" not in env
+        # HTTP proxies and no_proxy must survive so pip can still reach PyPI
+        assert env["HTTP_PROXY"] == "http://localhost:1081"
+        assert env["no_proxy"] == "localhost"
+
+
+class TestEnsureSocksSupport:
+    def test_noop_without_socks_proxy(self, monkeypatch):
+        monkeypatch.setenv("http_proxy", "http://localhost:1081")
+        monkeypatch.setattr(
+            sbw, "install_pysocks", lambda: pytest.fail("must not install")
+        )
+        sbw.ensure_socks_support()  # neither raises nor installs
+
+    def test_keeps_existing_pysocks(self, monkeypatch):
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        monkeypatch.setattr(sbw, "_can_import", lambda name: True)
+        monkeypatch.setattr(
+            sbw, "install_pysocks", lambda: pytest.fail("must not install")
+        )
+        sbw.ensure_socks_support()
+
+    def test_installs_when_missing(self, monkeypatch):
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        monkeypatch.setattr(sbw, "_can_import", lambda name: False)
+        calls = []
+        monkeypatch.setattr(sbw, "install_pysocks", lambda: calls.append(True) or True)
+
+        sbw.ensure_socks_support()
+
+        assert calls == [True]
+
+    def test_raises_when_install_fails(self, monkeypatch):
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        monkeypatch.setattr(sbw, "_can_import", lambda name: False)
+        monkeypatch.setattr(sbw, "install_pysocks", lambda: False)
+
+        with pytest.raises(RuntimeError, match="python3-socks"):
+            sbw.ensure_socks_support()
+
+    def test_disabled_auto_install_fails_fast(self, monkeypatch):
+        monkeypatch.setenv("all_proxy", "socks5://localhost:1080")
+        monkeypatch.setattr(sbw, "_can_import", lambda name: False)
+        monkeypatch.setattr(
+            sbw, "install_pysocks", lambda: pytest.fail("must not install")
+        )
+
+        with pytest.raises(RuntimeError, match="PySocks"):
+            sbw.ensure_socks_support(auto_install=False)
+
+
+class TestInstallPysocks:
+    def test_escalates_to_break_system_packages(self, monkeypatch):
+        """PEP 668 hosts reject a plain --user install; the retry must kick in."""
+        monkeypatch.setattr(sbw, "_in_virtualenv", lambda: False)
+        calls = []
+        state = {"installed": False}
+
+        def fake_run_pip(cmd, env):
+            calls.append(cmd)
+            state["installed"] = "--break-system-packages" in cmd
+            return True
+
+        monkeypatch.setattr(sbw, "_run_pip", fake_run_pip)
+        monkeypatch.setattr(sbw, "_can_import", lambda name: state["installed"])
+
+        assert sbw.install_pysocks() is True
+        assert len(calls) == 2
+        assert "--user" in calls[0]
+        assert calls[0][-1] == sbw.PYSOCKS_PACKAGE
+        assert "--break-system-packages" in calls[1]
+
+    def test_gives_up_after_all_strategies(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(sbw, "_run_pip", lambda cmd, env: calls.append(cmd) or False)
+        monkeypatch.setattr(sbw, "_can_import", lambda name: False)
+
+        assert sbw.install_pysocks() is False
+        assert len(calls) == len(sbw._pip_strategies())
+
+    def test_run_pip_handles_oserror(self):
+        with patch.object(sbw.subprocess, "run", side_effect=OSError("boom")):
+            assert sbw._run_pip(["pip", "install"], {}) is False
+
+    def test_run_pip_reports_nonzero_exit(self):
+        result = MagicMock(returncode=1, stdout="", stderr="No matching distribution")
+        with patch.object(sbw.subprocess, "run", return_value=result):
+            assert sbw._run_pip(["pip", "install"], {}) is False
+
+    def test_run_pip_success(self):
+        result = MagicMock(returncode=0, stdout="Successfully installed PySocks", stderr="")
+        with patch.object(sbw.subprocess, "run", return_value=result):
+            assert sbw._run_pip(["pip", "install"], {}) is True
+
+
+class TestPipStrategies:
+    def test_user_strategies_dropped_in_virtualenv(self, monkeypatch):
+        """pip refuses '--user' inside a venv, so that attempt must be skipped."""
+        monkeypatch.setattr(sbw, "_in_virtualenv", lambda: True)
+        strategies = sbw._pip_strategies()
+
+        assert strategies  # something remains to try
+        assert all("--user" not in strategy for strategy in strategies)
+
+    def test_user_strategies_used_outside_virtualenv(self, monkeypatch):
+        monkeypatch.setattr(sbw, "_in_virtualenv", lambda: False)
+        assert sbw._pip_strategies() == sbw.PIP_INSTALL_STRATEGIES
+
+    def test_install_hint_matches_interpreter(self, monkeypatch):
+        monkeypatch.setattr(sbw, "_in_virtualenv", lambda: True)
+        assert "--user" not in sbw._pip_install_hint()
+
+        monkeypatch.setattr(sbw, "_in_virtualenv", lambda: False)
+        assert "--user" in sbw._pip_install_hint()
+
+
+class TestMainDependencyBootstrap:
+    def test_fails_fast_without_pysocks(self, monkeypatch):
+        """SOCKS proxy + no PySocks must abort with a clear error, not silently
+        produce 'No wallpaper data found'."""
+        monkeypatch.setenv("all_proxy", "socks5h://localhost:1080")
+        monkeypatch.setattr(sbw, "_can_import", lambda name: False)
+        monkeypatch.setattr(sbw, "install_pysocks", lambda: False)
+
+        with patch.object(
+            sbw, "check_network_connectivity", side_effect=AssertionError("must not run")
+        ):
+            assert sbw.main(["--num-days", "1", "--retention-days", "0"]) == 1
+
+    def test_proceeds_when_pysocks_available(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("all_proxy", "socks5h://localhost:1080")
+        monkeypatch.setattr(sbw, "_can_import", lambda name: True)
+
+        with patch.object(sbw, "check_network_connectivity", return_value=None):
+            with patch.object(sbw, "fetch_wallpaper_data", return_value={}):
+                exit_code = sbw.main([
+                    "--date", "2025-01-15",
+                    "--retention-days", "0",
+                    "--output-path", str(tmp_path),
+                ])
+
+        assert exit_code == 1  # no data, but the bootstrap did not block the run

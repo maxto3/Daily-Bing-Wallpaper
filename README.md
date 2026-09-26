@@ -14,6 +14,7 @@ Two implementations are available:
 - **Auto cleanup** — Automatically deletes expired files based on retention policy
 - **Resume-friendly** — Existing files are skipped, no redundant downloads
 - **Network check** — Verifies network connectivity before running; aborts with an error if offline
+- **Dependency self-healing** — Detects SOCKS proxies and auto-installs PySocks when missing (opt out with `--no-auto-install`)
 
 ---
 
@@ -27,6 +28,8 @@ Two implementations are available:
 ```bash
 pip install requests
 ```
+
+If the environment routes traffic through a **SOCKS proxy** (`http_proxy` / `https_proxy` / `all_proxy` set to `socks5://…` or `socks5h://…`), `requests` additionally needs **PySocks**. The script detects this at start-up and installs it on the fly (user site first, then `--break-system-packages` for PEP 668 hosts such as Debian 12+). If the install is not possible it stops with an actionable error instead of silently downloading nothing. Use `--no-auto-install` to fail fast without trying.
 
 ### Usage
 
@@ -76,6 +79,7 @@ python save_bing_wallpaper.py --retention-days 0
 | `--date` | string | None | `yyyy-MM-dd`, not in the future | Specifies a single date to download |
 | `--num-days` | int | 7 | 1 ~ 365 | Number of past days to download (ignored when `--date` is set) |
 | `--retention-days` | int | 14 | 0 ~ 3650 | Days to retain `.jpg` files; older files are deleted. Set to 0 to disable |
+| `--no-auto-install` | flag | off | — | Do not auto-install a missing optional dependency (PySocks); fail fast instead |
 | `--verbose`, `-v` | flag | off | — | Enable debug-level logging |
 
 ### Testing
@@ -93,6 +97,8 @@ python -m pytest tests/ -v
 # Run daily at 8:00 AM
 0 8 * * * cd /path/to/Daily-Bing-Wallpaper && python save_bing_wallpaper.py --output-path ~/Pictures/Wallpapers >> /tmp/bing-wallpaper.log 2>&1
 ```
+
+> **Note — cron and proxy variables**: cron never reads `~/.bashrc`, but on Debian/Ubuntu it does load `/etc/environment` through PAM (`pam_env.so` in `/etc/pam.d/cron`). A `http_proxy` / `https_proxy` defined there applies to scheduled jobs, while your interactive shell may see a completely different value — so the very same command can behave differently under cron. If the job needs a specific proxy, declare it at the top of the crontab (`http_proxy=http://127.0.0.1:1081`); clear an inherited one with `http_proxy=`.
 
 **Windows** — Use **Task Scheduler** (with `pythonw.exe` for no console window):
 

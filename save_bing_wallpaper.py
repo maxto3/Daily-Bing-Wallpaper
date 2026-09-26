@@ -8,6 +8,8 @@ GitHub repository and saves them to a local directory.
 Cross-platform: Windows, Linux, and macOS.
 Without --date, downloads wallpapers for the past N days (default: 7).
 With --date, downloads wallpaper for a specific date only.
+Installs PySocks automatically when a SOCKS proxy is detected in the
+environment (disable with --no-auto-install).
 """
 
 import argparse
@@ -15,6 +17,7 @@ import logging
 import os
 import re
 import socket
+import subprocess
 import sys
 import tempfile
 from datetime import date, datetime, timedelta
@@ -36,6 +39,24 @@ CONNECTIVITY_CHECK_HOST = "github.com"
 CONNECTIVITY_CHECK_PORT = 443
 CONNECTIVITY_CHECK_TIMEOUT = 5  # seconds
 
+# Optional dependency bootstrap (requests needs PySocks for SOCKS proxies)
+PYSOCKS_PACKAGE = "PySocks"
+SOCKS_SCHEMES = frozenset({"socks4", "socks4a", "socks5", "socks5h"})
+PIP_INSTALL_TIMEOUT = 180  # seconds
+# Proxy env vars are only acted upon when requests would really use them
+PROXY_PROBE_URLS = (
+    "https://github.com/",
+    "https://cn.bing.com/",
+)
+# pip strategies tried in order until `import socks` succeeds. The
+# --break-system-packages variants cover PEP 668 environments (Debian 12+,
+# Ubuntu 23.04+) where a plain `pip install` is refused.
+PIP_INSTALL_STRATEGIES = (
+    ("--user", PYSOCKS_PACKAGE),
+    ("--user", "--break-system-packages", PYSOCKS_PACKAGE),
+    ("--break-system-packages", PYSOCKS_PACKAGE),
+)
+
 # Regex to extract date + 4K URL from markdown table rows
 # Pattern: YYYY-MM-DD [download 4k](URL)
 URL_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})\s*\[download 4k\]\(([^)]+)\)")
@@ -44,6 +65,228 @@ URL_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})\s*\[download 4k\]\(([^)]+)\)")
 FILENAME_DATE_PATTERN = re.compile(r"^(\d{4})-(\d{2})-(\d{2})\.jpg$")
 
 log = logging.getLogger("save_bing_wallpaper")
+
+# ---------------------------------------------------------------------------
+# Optional dependency bootstrap (PySocks / SOCKS proxies)
+# ---------------------------------------------------------------------------
+
+
+def _proxy_scheme(value: str) -> str:
+    """Return the lower-cased scheme of a proxy value.
+
+    requests prepends 'http://' to schemeless values ('localhost:1080'), so
+    they are reported as HTTP proxies.
+    """
+    value = value.strip()
+    if "://" not in value:
+        return "http"
+    return value.split("://", 1)[0].strip().lower()
+
+
+def _proxy_env_entries() -> dict[str, str]:
+    """Map environment variable name -> value for proxy variables.
+
+    Excludes no_proxy (which lists hosts that must bypass the proxy).
+    """
+    entries: dict[str, str] = {}
+    for name, value in os.environ.items():
+        lowered = name.lower()
+        if not lowered.endswith("_proxy") or lowered.startswith("no_"):
+            continue
+        value = value.strip()
+        if value:
+            entries[name] = value
+    return entries
+
+
+def detect_socks_proxies(
+    urls: tuple[str, ...] = PROXY_PROBE_URLS,
+) -> dict[str, str]:
+    """Return the SOCKS proxy env vars that requests would actually use.
+
+    Plain HTTP(S) proxies need no extra dependency and are ignored, as are
+    variables that no_proxy exempts for every probe URL.
+
+    Returns:
+        Dict mapping environment variable name -> proxy value (may be empty).
+    """
+    entries = {
+        name: value
+        for name, value in _proxy_env_entries().items()
+        if _proxy_scheme(value) in SOCKS_SCHEMES
+    }
+    if not entries:
+        return {}
+
+    from requests.utils import should_bypass_proxies
+
+    for url in urls:
+        try:
+            if not should_bypass_proxies(url, no_proxy=None):
+                return entries  # at least one probe URL goes through the proxy
+        except Exception:  # pragma: no cover - defensive
+            return entries
+    return {}
+
+
+def _can_import(module_name: str) -> bool:
+    """Return True if module_name can be imported in this process.
+
+    A freshly installed '--user' module may live in a site directory that was
+    absent from sys.path when the interpreter started, so that location is
+    added before giving up.
+    """
+    import importlib
+    import site
+
+    for attempt in (0, 1):
+        try:
+            importlib.import_module(module_name)
+            return True
+        except ImportError:
+            if attempt:
+                return False
+            try:
+                user_site = site.getusersitepackages()
+            except Exception:
+                return False
+            if user_site and user_site not in sys.path and Path(user_site).is_dir():
+                sys.path.append(user_site)
+            importlib.invalidate_caches()
+        except Exception:
+            return False
+    return False
+
+
+def _pip_env() -> dict[str, str]:
+    """Environment for the pip subprocess.
+
+    SOCKS proxy variables are removed: pip vendors its own urllib3 and would
+    fail with the very same 'Missing dependencies for SOCKS support.' error
+    that this bootstrap is trying to fix.
+    """
+    env = os.environ.copy()
+    for name in list(env):
+        lowered = name.lower()
+        if (
+            lowered.endswith("_proxy")
+            and not lowered.startswith("no_")
+            and _proxy_scheme(env[name]) in SOCKS_SCHEMES
+        ):
+            del env[name]
+    return env
+
+
+def _run_pip(cmd: list[str], env: dict[str, str]) -> bool:
+    """Run a pip command; return True when it exits with code 0."""
+    log.debug("Running: %s", " ".join(cmd))
+    try:
+        proc = subprocess.run(
+            cmd,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=PIP_INSTALL_TIMEOUT,
+            check=False,
+        )
+    except FileNotFoundError:
+        log.warning("pip is unavailable for %s - cannot auto-install.", sys.executable)
+        return False
+    except subprocess.TimeoutExpired:
+        log.warning("pip timed out after %d seconds.", PIP_INSTALL_TIMEOUT)
+        return False
+    except OSError as exc:
+        log.warning("Could not run pip: %s", exc)
+        return False
+
+    if proc.returncode != 0:
+        detail = " | ".join((proc.stderr or proc.stdout or "").strip().splitlines()[-3:])
+        log.warning("pip failed with exit code %d: %s", proc.returncode, detail)
+        return False
+    return True
+
+
+def _in_virtualenv() -> bool:
+    """True when running inside a virtual environment (venv/virtualenv)."""
+    return sys.prefix != getattr(sys, "base_prefix", sys.prefix)
+
+
+def _pip_strategies() -> tuple[tuple[str, ...], ...]:
+    """pip install strategies that make sense for this interpreter.
+
+    '--user' is rejected inside a virtual environment ("User site-packages are
+    not visible in this virtualenv"), so those strategies are dropped there.
+    """
+    if _in_virtualenv():
+        return tuple(s for s in PIP_INSTALL_STRATEGIES if "--user" not in s)
+    return PIP_INSTALL_STRATEGIES
+
+
+def _pip_install_hint() -> str:
+    """Actionable pip command for the interpreter that is currently running."""
+    if _in_virtualenv():
+        return f"{sys.executable} -m pip install {PYSOCKS_PACKAGE}"
+    return f"{sys.executable} -m pip install --user {PYSOCKS_PACKAGE}"
+
+
+def install_pysocks() -> bool:
+    """Try to install PySocks; return True once `socks` becomes importable."""
+    env = _pip_env()
+    strategies = _pip_strategies()
+    for index, strategy in enumerate(strategies, start=1):
+        log.info(
+            "Auto-installing '%s' (attempt %d/%d: %s)...",
+            PYSOCKS_PACKAGE,
+            index,
+            len(strategies),
+            " ".join(flag for flag in strategy if flag != PYSOCKS_PACKAGE),
+        )
+        cmd = [sys.executable, "-m", "pip", "install", *strategy]
+        if _run_pip(cmd, env) and _can_import("socks"):
+            return True
+    return False
+
+
+def ensure_socks_support(auto_install: bool = True) -> None:
+    """Fail fast when a SOCKS proxy is configured but PySocks is missing.
+
+    requests can only use SOCKS proxies when PySocks (`socks`) is installed.
+    Without it every request raises 'Missing dependencies for SOCKS support.',
+    which upstream code turns into an empty result set. When that combination
+    is detected and auto_install is True, PySocks is installed on the fly.
+
+    Raises:
+        RuntimeError: A SOCKS proxy is required but PySocks is unavailable.
+    """
+    socks_entries = detect_socks_proxies()
+    if not socks_entries:
+        return
+
+    described = ", ".join(
+        f"{name}={value}" for name, value in sorted(socks_entries.items())
+    )
+
+    if _can_import("socks"):
+        log.info("SOCKS proxy in use (%s); PySocks is installed.", described)
+        return
+
+    log.warning(
+        "SOCKS proxy in use (%s) but PySocks is missing - requests cannot use it.",
+        described,
+    )
+    if auto_install and install_pysocks():
+        log.info("PySocks installed - SOCKS proxy support enabled.")
+        return
+
+    raise RuntimeError(
+        f"SOCKS proxy is configured ({described}) but the Python module 'socks' "
+        f"({PYSOCKS_PACKAGE}) is missing. Fix with one of: "
+        f"'sudo apt install python3-socks' (Debian/Ubuntu), "
+        f"'{_pip_install_hint()}', "
+        f"or unset the SOCKS proxy variables (http_proxy/https_proxy/all_proxy) "
+        f"for this run."
+    )
+
 
 # ---------------------------------------------------------------------------
 # Cross-platform network connectivity check
@@ -464,6 +707,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Days to retain downloaded files; older files are deleted (default: 14, 0=never).",
     )
     parser.add_argument(
+        "--no-auto-install",
+        dest="auto_install",
+        action="store_false",
+        help="Do not auto-install a missing optional dependency (PySocks); fail fast instead.",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -499,17 +748,24 @@ def main(argv: list[str] | None = None) -> int:
 
     output_dir = Path(args.output_path)
 
-    # 1. Network check
+    # 1. Optional dependencies (a SOCKS proxy needs PySocks)
+    try:
+        ensure_socks_support(auto_install=args.auto_install)
+    except RuntimeError as exc:
+        log.error("%s", exc)
+        return 1
+
+    # 2. Network check
     try:
         check_network_connectivity()
     except RuntimeError as exc:
         log.error("%s", exc)
         return 1
 
-    # 2. Build date list
+    # 3. Build date list
     date_strings = build_date_list(args.date, args.num_days)
 
-    # 3. Fetch wallpaper index from GitHub
+    # 4. Fetch wallpaper index from GitHub
     log.info("Fetching wallpaper index for %d date(s)...", len(date_strings))
     date_url_map = fetch_wallpaper_data(date_strings)
 
@@ -517,7 +773,7 @@ def main(argv: list[str] | None = None) -> int:
         log.error("No wallpaper data found for the requested date(s).")
         return 1
 
-    # 4. Build download tasks
+    # 5. Build download tasks
     download_tasks: list[dict] = []
     for date_str in date_strings:
         if date_str in date_url_map:
@@ -533,20 +789,20 @@ def main(argv: list[str] | None = None) -> int:
         log.error("No valid download tasks to process.")
         return 1
 
-    # 5. Ensure output directory exists
+    # 6. Ensure output directory exists
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         log.error("Failed to create output directory '%s': %s", output_dir, exc)
         return 1
 
-    # 6. Retention cleanup
+    # 7. Retention cleanup
     cleanup_expired(output_dir, args.retention_days)
 
-    # 7. Download wallpapers
+    # 8. Download wallpapers
     downloaded, skipped, failed = download_wallpapers(download_tasks, output_dir)
 
-    # 8. Summary
+    # 9. Summary
     log.info(
         "Finished: %d downloaded, %d skipped, %d failed, %d total.",
         downloaded,

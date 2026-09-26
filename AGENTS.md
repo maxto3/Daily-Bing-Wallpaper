@@ -20,10 +20,10 @@ Invoke-Pester -Path .\tests\Save-BingWallpaper.Tests.ps1  # test
 
 Two independent implementations sharing identical workflow but using platform-native I/O:
 
-1. Network check → 2. Build date list → 3. Fetch GitHub monthly README → 4. Parse 4K URLs via regex → 5. Cleanup expired → 6. Download (skip existing) → 7. Exit 0/1
+1. Ensure optional deps → 2. Network check → 3. Build date list → 4. Fetch GitHub monthly README → 5. Parse 4K URLs via regex → 6. Cleanup expired → 7. Download (skip existing) → 8. Exit 0/1
 
 **Key files:**
-- `save_bing_wallpaper.py` (482 lines) — Python impl, cross-platform
+- `save_bing_wallpaper.py` (818 lines) — Python impl, cross-platform
 - `Save-BingWallpaper.ps1` (275 lines) — PowerShell impl
 - `tests/test_save_bing_wallpaper.py` — pytest unit tests (mocks requests)
 - `tests/Save-BingWallpaper.Tests.ps1` — Pester tests (mocks cmdlets)
@@ -46,3 +46,6 @@ Two independent implementations sharing identical workflow but using platform-na
 - **No config files**: All settings are CLI args/params only. No setup.py, requirements.txt, or pyproject.toml.
 - **GitHub raw content URLs**: Uses `niumoo/bing-wallpaper` repo; rate limiting is a concern with batch downloads.
 - **Pester test limitation**: Retention cleanup tests are disabled in legacy Pester 3 due to mock restrictions (noted in test file header).
+- **cron does not read `~/.bashrc`**: on Debian/Ubuntu cron loads `/etc/environment` through PAM (`pam_env.so` in `/etc/pam.d/cron`), so a SOCKS `http_proxy` defined there reaches scheduled jobs while the interactive shell sees the `.bashrc` value. When debugging "works manually, fails under cron", diff the proxy variables first.
+- **Python-only dependency bootstrap**: `ensure_socks_support()` detects SOCKS proxy env vars and auto-installs PySocks (`--no-auto-install` opts out, then it exits 1 with guidance). Do NOT port this to PowerShell — `Invoke-WebRequest` ignores proxy env vars. `_pip_env()` strips SOCKS vars before calling pip, because pip vendors urllib3 and would hit the same missing-dependency error.
+- **Proxy-env test isolation**: `tests/test_save_bing_wallpaper.py` has an autouse fixture that strips `*_proxy` so a host with SOCKS proxies cannot trigger installs during a test run.
